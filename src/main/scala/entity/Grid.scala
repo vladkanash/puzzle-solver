@@ -12,7 +12,7 @@ class Grid(val height: Int, val width: Int, val chunks: List[Chunk] = List.empty
     else if (placedCells.intersect(mappedChunk.cells).isEmpty)
       new Grid(height, width, mappedChunk :: chunks)
     else this
-  }``
+  }
 
   def freeCellsNum: Int = cellsNum - placedCells.length
 
