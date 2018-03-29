@@ -39,7 +39,7 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
       yield createRandomChunk(chunkSize)
 
   private val gridGenerator =
-    for (width <- Gen.choose(0, GRID_MAX_SIZE); height <- Gen.choose(0, GRID_MAX_SIZE))
+    for (width <- Gen.choose(1, GRID_MAX_SIZE); height <- Gen.choose(1, GRID_MAX_SIZE))
       yield new Grid(height, width)
 
   property("You should be able to place chunks on a grid") {
@@ -57,10 +57,18 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
     forAll(chunksGenerator, gridGenerator, posGenerator) {
       (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
         val newGrid = grid.setChunk(chunk, startPos)
-        if (newGrid != grid) {
+        if (newGrid != grid)
           newGrid.freeCells intersect newGrid.placedCells shouldEqual List.empty
-        }
         else succeed
+      }
+    }
+  }
+
+  property("canPlaceChunk() should check id the chunk fits to the current grid") {
+    forAll(chunksGenerator, gridGenerator, posGenerator) {
+      (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
+        val newGrid = grid.setChunk(chunk, startPos)
+        (newGrid != grid) shouldEqual grid.canPlaceChunk(chunk, startPos)
       }
     }
   }
