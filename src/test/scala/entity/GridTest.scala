@@ -19,10 +19,10 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
       2 -> (0, 1),
       3 -> (-1, 0))
 
-    def appendCells(cells: List[(Int, Int)], cellsLeft: Int): List[(Int, Int)] = {
+    def appendCells(cells: List[Cell], cellsLeft: Int): List[Cell] = {
       val cell = cells(random.nextInt(cells.length))
       val direction = directionMap(random.nextInt(4))
-      val newCell = (cell._1 + direction._1, cell._2 + direction._2)
+      val newCell = cell + direction
       val newList = (newCell :: cells).distinct
       if (cellsLeft <= 0) newList else appendCells(newList, cellsLeft - 1)
     }
@@ -41,7 +41,6 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
   private val gridGenerator =
     for (width <- Gen.choose(1, GRID_MAX_SIZE); height <- Gen.choose(1, GRID_MAX_SIZE))
       yield new Grid(height, width)
-
 
   def gridTest(testName: String)(test: (Chunk, Grid, (Int, Int)) => Assertion): Unit = {
     property(testName) {

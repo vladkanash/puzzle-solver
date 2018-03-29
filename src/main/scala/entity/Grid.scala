@@ -1,8 +1,10 @@
 package entity
 
-class Grid(val height: Int, val width: Int, val chunks: List[Chunk] = List.empty) {
+class Grid(val height: Int,
+           val width: Int,
+           val chunks: List[Chunk] = List.empty) {
 
-  def setChunk(chunk: Chunk, startPos: (Int, Int), optimize: Boolean = false): Grid = {
+  def setChunk(chunk: Chunk, startPos: Cell, optimize: Boolean = false): Grid = {
     if (optimize || canPlaceChunk(chunk, startPos)) {
         new Grid(height, width, chunk.setToPos(startPos) :: chunks)
     } else this
@@ -10,7 +12,7 @@ class Grid(val height: Int, val width: Int, val chunks: List[Chunk] = List.empty
 
   def freeCellsNum: Int = cellsNum - placedCells.length
 
-  def canPlaceChunk(chunk: Chunk, startPos: (Int, Int)): Boolean = {
+  def canPlaceChunk(chunk: Chunk, startPos: Cell): Boolean = {
     val mappedCells = chunk.setToPos(startPos).cells
     (!mappedCells.exists(invalidCell)) && placedCells.intersect(mappedCells).isEmpty
   }
@@ -35,15 +37,15 @@ class Grid(val height: Int, val width: Int, val chunks: List[Chunk] = List.empty
 
   lazy val cellsNum: Int = height * width
 
-  lazy val placedCells: List[(Int, Int)] = chunks.flatMap(_.cells)
+  lazy val placedCells: List[Cell] = chunks.flatMap(_.cells)
 
   lazy val freeCells: List[(Int, Int)] =
-    (for (x <- 0 until width; y <- 0 until height if !placedCells.contains((y, x))) yield (y, x)).toList
+    (for (x <- 0 until width; y <- 0 until height if !placedCells.contains(Cell(y, x))) yield (y, x)).toList
 
   lazy val isFull: Boolean = freeCells.isEmpty
 
-  private def invalidCell(cell: (Int, Int)): Boolean =
-    (cell._1 < 0 || cell._2 < 0) || (cell._1 >= height || cell._2 >= width)
+  private def invalidCell(cell: Cell): Boolean =
+    (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Grid]
 
@@ -67,7 +69,7 @@ class Grid(val height: Int, val width: Int, val chunks: List[Chunk] = List.empty
   override def toString: String = {
     val values = Array.ofDim[Int](height, width)
     chunks.zipWithIndex.foreach {
-      case (chunk, idx) => chunk.cells.foreach(cell => values(cell._1)(cell._2) = idx + 1)
+      case (chunk, idx) => chunk.cells.foreach(cell => values(cell.y)(cell.x) = idx + 1)
     }
     values.map(row => row.mkString("[", " ", "]")).mkString("\n", "\n", "\n")
   }

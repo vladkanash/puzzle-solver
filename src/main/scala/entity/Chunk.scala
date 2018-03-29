@@ -1,16 +1,16 @@
 package entity
 
-class Chunk(val cells: List[(Int, Int)]) {
+class Chunk(val cells: List[Cell]) {
 
-  def setToPos(startPos: (Int, Int)): Chunk =
-    new Chunk(cells.map(pos => (startPos._1 + pos._1, startPos._2 + pos._2)))
+  def setToPos(startPos: Cell): Chunk =
+    new Chunk(cells.map(_ + startPos))
 
   override def toString: String = {
-    val minY = cells.minBy(cell => cell._1)._1
-    val maxY = cells.maxBy(cell => cell._1)._1
+    val minY = cells.minBy(_.y).y
+    val maxY = cells.maxBy(_.y).y
 
-    val minX = cells.minBy(cell => cell._2)._2
-    val maxX = cells.maxBy(cell => cell._2)._2
+    val minX = cells.minBy(_.x).x
+    val maxX = cells.maxBy(_.x).x
 
     val height = maxY - minY + 1
     val width = maxX - minX + 1
