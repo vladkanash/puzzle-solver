@@ -12,24 +12,6 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
   private val GRID_MAX_SIZE = 10
   private val random = new Random
 
-  private def createRandomChunk(size: Int): Chunk = {
-    val directionMap = Map(
-      0 -> (0, -1),
-      1 -> (1, 0),
-      2 -> (0, 1),
-      3 -> (-1, 0))
-
-    def appendCells(cells: List[Cell], cellsLeft: Int): List[Cell] = {
-      val cell = cells(random.nextInt(cells.length))
-      val direction = directionMap(random.nextInt(4))
-      val newCell = cell + direction
-      val newList = (newCell :: cells).distinct
-      if (cellsLeft <= 0) newList else appendCells(newList, cellsLeft - 1)
-    }
-
-    new Chunk(appendCells(List((0, 0)), size))
-  }
-
   private val posGenerator =
     for (x <- Gen.choose(0, GRID_MAX_SIZE); y <- Gen.choose(0, GRID_MAX_SIZE))
       yield (x, y)
@@ -50,6 +32,24 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
         }
       }
     }
+  }
+
+  private def createRandomChunk(size: Int): Chunk = {
+    val directionMap = Map(
+      0 -> (0, -1),
+      1 -> (1, 0),
+      2 -> (0, 1),
+      3 -> (-1, 0))
+
+    def appendCells(cells: List[Cell], cellsLeft: Int): List[Cell] = {
+      val cell = cells(random.nextInt(cells.length))
+      val direction = directionMap(random.nextInt(4))
+      val newCell = cell + direction
+      val newList = (newCell :: cells).distinct
+      if (cellsLeft <= 0) newList else appendCells(newList, cellsLeft - 1)
+    }
+
+    new Chunk(appendCells(List((0, 0)), size))
   }
 
   gridTest("You should be able to place chunks on a grid") {
@@ -82,10 +82,9 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
       val chunks = List(chunk, chunk, chunk, chunk)
       val newGrid = grid.placeChunks(chunks)
       if (newGrid != grid)
-        newGrid.freeCellsNum shouldBe < (grid.freeCellsNum)
+        newGrid.freeCellsNum shouldBe <(grid.freeCellsNum)
       else
-        newGrid.placedCells.length shouldBe < (chunks.flatMap(_.cells).length)
+        newGrid.placedCells.length shouldBe <(chunks.flatMap(_.cells).length)
     }
   }
-
 }

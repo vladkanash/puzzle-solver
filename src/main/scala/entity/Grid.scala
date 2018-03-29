@@ -4,9 +4,21 @@ class Grid(val height: Int,
            val width: Int,
            val chunks: List[Chunk] = List.empty) {
 
+  lazy val cellsNum: Int = height * width
+
+  lazy val placedCells: List[Cell] = chunks.flatMap(_.cells)
+
+  lazy val freeCells: List[Cell] =
+    (for (x <- 0 until width;
+          y <- 0 until height
+          if !placedCells.contains(Cell(y, x)))
+      yield Cell(y, x)).toList
+
+  lazy val isFull: Boolean = freeCells.isEmpty
+
   def setChunk(chunk: Chunk, startPos: Cell, optimize: Boolean = false): Grid = {
     if (optimize || canPlaceChunk(chunk, startPos)) {
-        new Grid(height, width, chunk.setToPos(startPos) :: chunks)
+      new Grid(height, width, chunk.setToPos(startPos) :: chunks)
     } else this
   }
 
@@ -35,20 +47,6 @@ class Grid(val height: Int,
         .getOrElse(this)
   }
 
-  lazy val cellsNum: Int = height * width
-
-  lazy val placedCells: List[Cell] = chunks.flatMap(_.cells)
-
-  lazy val freeCells: List[(Int, Int)] =
-    (for (x <- 0 until width; y <- 0 until height if !placedCells.contains(Cell(y, x))) yield (y, x)).toList
-
-  lazy val isFull: Boolean = freeCells.isEmpty
-
-  private def invalidCell(cell: Cell): Boolean =
-    (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
-
-  def canEqual(other: Any): Boolean = other.isInstanceOf[Grid]
-
   override def equals(other: Any): Boolean = other match {
     case that: Grid =>
       (that canEqual this) &&
@@ -60,6 +58,8 @@ class Grid(val height: Int,
         chunks == that.chunks
     case _ => false
   }
+
+  def canEqual(other: Any): Boolean = other.isInstanceOf[Grid]
 
   override def hashCode(): Int = {
     val state = Seq(cellsNum, placedCells, freeCells, isFull, height, width, chunks)
@@ -73,6 +73,9 @@ class Grid(val height: Int,
     }
     values.map(row => row.mkString("[", " ", "]")).mkString("\n", "\n", "\n")
   }
+
+  private def invalidCell(cell: Cell): Boolean =
+    (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
 }
 
 object Grid {
