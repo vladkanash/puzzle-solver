@@ -1,8 +1,8 @@
 package entity
 
 import org.scalacheck.Gen
-import org.scalatest.{Matchers, PropSpec}
 import org.scalatest.prop.PropertyChecks
+import org.scalatest.{Assertion, Matchers, PropSpec}
 
 import scala.util.Random
 
@@ -42,34 +42,38 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
     for (width <- Gen.choose(1, GRID_MAX_SIZE); height <- Gen.choose(1, GRID_MAX_SIZE))
       yield new Grid(height, width)
 
-  property("You should be able to place chunks on a grid") {
-    forAll(chunksGenerator, gridGenerator, posGenerator) {
-      (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
-        val newGrid = grid.setChunk(chunk, startPos)
-        if (newGrid != grid)
-          grid.freeCellsNum - newGrid.freeCellsNum shouldEqual chunk.cells.length
-        else succeed
+
+  def gridTest(testName: String)(test: (Chunk, Grid, (Int, Int)) => Assertion): Unit = {
+    property(testName) {
+      forAll(chunksGenerator, gridGenerator, posGenerator) {
+        (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
+          test(chunk, grid, startPos)
+        }
       }
     }
   }
 
-  property("Free cells field should contain all free cells on the grid") {
-    forAll(chunksGenerator, gridGenerator, posGenerator) {
-      (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
-        val newGrid = grid.setChunk(chunk, startPos)
-        if (newGrid != grid)
-          newGrid.freeCells intersect newGrid.placedCells shouldEqual List.empty
-        else succeed
-      }
+  gridTest("You should be able to place chunks on a grid") {
+    (chunk, grid, startPos) => {
+      val newGrid = grid.setChunk(chunk, startPos)
+      if (newGrid != grid) grid.freeCellsNum - newGrid.freeCellsNum shouldEqual chunk.cells.length
+      else succeed
     }
   }
 
-  property("canPlaceChunk() should check id the chunk fits to the current grid") {
-    forAll(chunksGenerator, gridGenerator, posGenerator) {
-      (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
-        val newGrid = grid.setChunk(chunk, startPos)
-        (newGrid != grid) shouldEqual grid.canPlaceChunk(chunk, startPos)
-      }
+  gridTest("Free cells field should contain all free cells on the grid") {
+    (chunk, grid, startPos) => {
+      val newGrid = grid.setChunk(chunk, startPos)
+      if (newGrid != grid)
+        newGrid.freeCells intersect newGrid.placedCells shouldEqual List.empty
+      else succeed
+    }
+  }
+
+  gridTest("canPlaceChunk() should check id the chunk fits to the current grid") {
+    (chunk, grid, startPos) => {
+      val newGrid = grid.setChunk(chunk, startPos)
+      (newGrid != grid) shouldEqual grid.canPlaceChunk(chunk, startPos)
     }
   }
 
