@@ -56,7 +56,8 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
   gridTest("You should be able to place chunks on a grid") {
     (chunk, grid, startPos) => {
       val newGrid = grid.setChunk(chunk, startPos)
-      if (newGrid != grid) grid.freeCellsNum - newGrid.freeCellsNum shouldEqual chunk.cells.length
+      if (newGrid != grid)
+        grid.freeCellsNum - newGrid.freeCellsNum shouldEqual chunk.cells.length
       else succeed
     }
   }
@@ -74,6 +75,17 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
     (chunk, grid, startPos) => {
       val newGrid = grid.setChunk(chunk, startPos)
       (newGrid != grid) shouldEqual grid.canPlaceChunk(chunk, startPos)
+    }
+  }
+
+  gridTest("placeChunks() should try to fill the grid with chunks") {
+    (chunk, grid, _) => {
+      val chunks = List(chunk, chunk, chunk, chunk)
+      val newGrid = grid.placeChunks(chunks)
+      if (newGrid != grid)
+        newGrid.freeCellsNum shouldBe < (grid.freeCellsNum)
+      else
+        newGrid.placedCells.length shouldBe < (chunks.flatMap(_.cells).length)
     }
   }
 
