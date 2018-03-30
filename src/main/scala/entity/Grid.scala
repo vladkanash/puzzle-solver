@@ -44,7 +44,10 @@ class Grid(val height: Int,
     chunks.zipWithIndex.foreach {
       case (chunk, idx) => chunk.cells.foreach(cell => values(cell.y)(cell.x) = idx + 1)
     }
-    values.map(row => row.mkString("[", " ", "]")).mkString("\n", "\n", "\n")
+    values.map(row => row
+      .map(cell => if (cell != 0) (cell + 64).toChar else '-')
+      .mkString("[", " ", "]"))
+      .mkString("\n", "\n", "\n")
   }
 
   private def getRotatedChunks(chunk: Chunk, startPos: Cell): List[Chunk] = {
