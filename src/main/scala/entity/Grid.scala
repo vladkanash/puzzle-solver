@@ -17,8 +17,10 @@ class Grid(val height: Int,
 
   lazy val isFull: Boolean = freeCells.isEmpty
 
-  def setChunk(chunk: Chunk, startPos: Cell, optimize: Boolean = false): Option[Grid] = {
-    if (optimize || canPlaceChunk(chunk, startPos)) {
+  lazy val freeCellsNum: Int = cellsNum - placedCells.length
+
+  def setChunk(chunk: Chunk, startPos: Cell, skipCheck: Boolean = false): Option[Grid] = {
+    if (skipCheck || canPlaceChunk(chunk, startPos)) {
       Some(new Grid(height, width, chunk.setToPos(startPos) :: chunks))
     } else None
   }
@@ -28,22 +30,18 @@ class Grid(val height: Int,
     (!mappedCells.exists(invalidCell)) && placedCells.intersect(mappedCells).isEmpty
   }
 
-  def getRotatedChunks(chunk: Chunk, startPos: Cell): List[Chunk] = {
-    chunk.rotated.filter(canPlaceChunk(_, startPos))
-  }
-
-  def freeCellsNum: Int = cellsNum - placedCells.length
-
-  def placeChunks(chunks: List[Chunk]): Option[Grid]= chunks match {
+  def placeChunks(chunks: List[Chunk]): Option[Grid] = chunks match {
+    case Nil => Some(this)
     case chunk :: Nil =>
       freeCells
         .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
-        .map(tuple => setChunk(tuple._2, tuple._1, optimize = true))
+        .map(tuple => setChunk(tuple._2, tuple._1, skipCheck = true))
         .find(_.isDefined).flatten
+
     case chunk :: tail =>
       freeCells
         .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
-        .map(tuple => setChunk(tuple._2, tuple._1, optimize = true))
+        .map(tuple => setChunk(tuple._2, tuple._1, skipCheck = true))
         .filter(_.nonEmpty).map(_.get)
         .map(grid => grid.placeChunks(tail))
         .find(_.isDefined).flatten
@@ -76,11 +74,10 @@ class Grid(val height: Int,
     values.map(row => row.mkString("[", " ", "]")).mkString("\n", "\n", "\n")
   }
 
+  private def getRotatedChunks(chunk: Chunk, startPos: Cell): List[Chunk] = {
+    chunk.rotated.filter(canPlaceChunk(_, startPos))
+  }
+
   private def invalidCell(cell: Cell): Boolean =
     (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
-}
-
-object Grid {
-  val NON_EMPTY_CELL = 1
-  val EMPTY_CELL = 0
 }

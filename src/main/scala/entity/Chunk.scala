@@ -32,5 +32,4 @@ case class Chunk(cells: List[Cell]) {
 
   private def rotate90: Chunk =
     Chunk(this.cells.map(_.rotate90))
-
 }
