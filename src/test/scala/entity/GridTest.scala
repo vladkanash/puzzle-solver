@@ -81,10 +81,8 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
     (chunk, grid, _) => {
       val chunks = List(chunk, chunk, chunk)
       val newGrid = grid.placeChunks(chunks)
-      if (newGrid.isDefined) {
-        println(newGrid)
+      if (newGrid.isDefined)
         newGrid.get.freeCellsNum shouldBe < (grid.freeCellsNum)
-      }
       else succeed
     }
   }
