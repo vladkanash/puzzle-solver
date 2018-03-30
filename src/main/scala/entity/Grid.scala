@@ -15,8 +15,6 @@ class Grid(val height: Int,
          if !placedCells.contains(cell))
       yield cell
 
-  lazy val isFull: Boolean = freeCells.isEmpty
-
   lazy val freeCellsNum: Int = cellsNum - placedCells.length
 
   def setChunk(chunk: Chunk, startPos: Cell, skipCheck: Boolean = false): Option[Grid] = {
@@ -45,25 +43,6 @@ class Grid(val height: Int,
         .filter(_.nonEmpty).map(_.get)
         .map(grid => grid.placeChunks(tail))
         .find(_.isDefined).flatten
-  }
-
-  override def equals(other: Any): Boolean = other match {
-    case that: Grid =>
-      (that canEqual this) &&
-        cellsNum == that.cellsNum &&
-        placedCells == that.placedCells &&
-        freeCells == that.freeCells &&
-        height == that.height &&
-        width == that.width &&
-        chunks == that.chunks
-    case _ => false
-  }
-
-  def canEqual(other: Any): Boolean = other.isInstanceOf[Grid]
-
-  override def hashCode(): Int = {
-    val state = Seq(cellsNum, placedCells, freeCells, isFull, height, width, chunks)
-    state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
   }
 
   override def toString: String = {
