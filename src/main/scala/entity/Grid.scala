@@ -30,19 +30,13 @@ class Grid(val height: Int,
 
   def placeChunks(chunks: List[Chunk]): Option[Grid] = chunks match {
     case Nil => Some(this)
-    case chunk :: Nil =>
-      freeCells
-        .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
-        .map(tuple => setChunk(tuple._2, tuple._1, skipCheck = true))
-        .find(_.isDefined).flatten
-
     case chunk :: tail =>
       freeCells
         .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
         .map(tuple => setChunk(tuple._2, tuple._1, skipCheck = true))
         .filter(_.nonEmpty).map(_.get)
-        .map(grid => grid.placeChunks(tail))
-        .find(_.isDefined).flatten
+        .find(grid => grid.placeChunks(tail).isDefined)
+        .flatMap(grid => grid.placeChunks(tail))
   }
 
   override def toString: String = {
