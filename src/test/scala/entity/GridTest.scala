@@ -49,14 +49,14 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
       if (cellsLeft <= 0) newList else appendCells(newList, cellsLeft - 1)
     }
 
-    new Chunk(appendCells(List((0, 0)), size))
+    Chunk(appendCells(List((0, 0)), size))
   }
 
   gridTest("You should be able to place chunks on a grid") {
     (chunk, grid, startPos) => {
       val newGrid = grid.setChunk(chunk, startPos)
-      if (newGrid != grid)
-        grid.freeCellsNum - newGrid.freeCellsNum shouldEqual chunk.cells.length
+      if (newGrid.isDefined)
+        grid.freeCellsNum - newGrid.get.freeCellsNum shouldEqual chunk.cells.length
       else succeed
     }
   }
@@ -64,8 +64,8 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
   gridTest("Free cells field should contain all free cells on the grid") {
     (chunk, grid, startPos) => {
       val newGrid = grid.setChunk(chunk, startPos)
-      if (newGrid != grid)
-        newGrid.freeCells intersect newGrid.placedCells shouldEqual List.empty
+      if (newGrid.isDefined)
+        newGrid.get.freeCells intersect newGrid.get.placedCells shouldEqual List.empty
       else succeed
     }
   }
@@ -73,18 +73,19 @@ class GridTest extends PropSpec with PropertyChecks with Matchers {
   gridTest("canPlaceChunk() should check id the chunk fits to the current grid") {
     (chunk, grid, startPos) => {
       val newGrid = grid.setChunk(chunk, startPos)
-      (newGrid != grid) shouldEqual grid.canPlaceChunk(chunk, startPos)
+      newGrid.isDefined shouldEqual grid.canPlaceChunk(chunk, startPos)
     }
   }
 
   gridTest("placeChunks() should try to fill the grid with chunks") {
     (chunk, grid, _) => {
-      val chunks = List(chunk, chunk, chunk, chunk)
+      val chunks = List(chunk, chunk, chunk)
       val newGrid = grid.placeChunks(chunks)
-      if (newGrid != grid)
-        newGrid.freeCellsNum shouldBe <(grid.freeCellsNum)
-      else
-        newGrid.placedCells.length shouldBe <(chunks.flatMap(_.cells).length)
+      if (newGrid.isDefined) {
+        println(newGrid)
+        newGrid.get.freeCellsNum shouldBe < (grid.freeCellsNum)
+      }
+      else succeed
     }
   }
 }

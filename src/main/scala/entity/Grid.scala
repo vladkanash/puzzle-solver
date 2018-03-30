@@ -8,43 +8,45 @@ class Grid(val height: Int,
 
   lazy val placedCells: List[Cell] = chunks.flatMap(_.cells)
 
-  lazy val freeCells: List[Cell] =
-    (for (x <- 0 until width;
-          y <- 0 until height
-          if !placedCells.contains(Cell(y, x)))
-      yield Cell(y, x)).toList
+  lazy val freeCells: IndexedSeq[Cell] =
+    for (x <- 0 until width;
+         y <- 0 until height;
+         cell = Cell(y, x)
+         if !placedCells.contains(cell))
+      yield cell
 
   lazy val isFull: Boolean = freeCells.isEmpty
 
-  def setChunk(chunk: Chunk, startPos: Cell, optimize: Boolean = false): Grid = {
+  def setChunk(chunk: Chunk, startPos: Cell, optimize: Boolean = false): Option[Grid] = {
     if (optimize || canPlaceChunk(chunk, startPos)) {
-      new Grid(height, width, chunk.setToPos(startPos) :: chunks)
-    } else this
+      Some(new Grid(height, width, chunk.setToPos(startPos) :: chunks))
+    } else None
   }
-
-  def freeCellsNum: Int = cellsNum - placedCells.length
 
   def canPlaceChunk(chunk: Chunk, startPos: Cell): Boolean = {
     val mappedCells = chunk.setToPos(startPos).cells
     (!mappedCells.exists(invalidCell)) && placedCells.intersect(mappedCells).isEmpty
   }
 
-  def placeChunks(chunks: List[Chunk]): Grid = chunks match {
-    case Nil => this
+  def getRotatedChunks(chunk: Chunk, startPos: Cell): List[Chunk] = {
+    chunk.rotated.filter(canPlaceChunk(_, startPos))
+  }
+
+  def freeCellsNum: Int = cellsNum - placedCells.length
+
+  def placeChunks(chunks: List[Chunk]): Option[Grid]= chunks match {
     case chunk :: Nil =>
       freeCells
-        .filter(cell => canPlaceChunk(chunk, cell))
-        .map(cell => this.setChunk(chunk, cell, optimize = true))
-        .find(grid => this != grid)
-        .getOrElse(this)
+        .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
+        .map(tuple => setChunk(tuple._2, tuple._1, optimize = true))
+        .find(_.isDefined).flatten
     case chunk :: tail =>
       freeCells
-        .filter(cell => canPlaceChunk(chunk, cell))
-        .map(cell => this.setChunk(chunk, cell, optimize = true))
-        .filter(grid => this != grid)
+        .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
+        .map(tuple => setChunk(tuple._2, tuple._1, optimize = true))
+        .filter(_.nonEmpty).map(_.get)
         .map(grid => grid.placeChunks(tail))
-        .find(grid => this != grid)
-        .getOrElse(this)
+        .find(_.isDefined).flatten
   }
 
   override def equals(other: Any): Boolean = other match {

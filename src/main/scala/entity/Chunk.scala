@@ -1,9 +1,18 @@
 package entity
 
-class Chunk(val cells: List[Cell]) {
+case class Chunk(cells: List[Cell]) {
+
+  lazy val rotated: List[Chunk] = {
+    List(
+      this,
+      this.rotate90,
+      this.rotate90.rotate90,
+      this.rotate90.rotate90.rotate90
+    )
+  }
 
   def setToPos(startPos: Cell): Chunk =
-    new Chunk(cells.map(_ + startPos))
+    Chunk(cells.map(_ + startPos))
 
   override def toString: String = {
     val minY = cells.minBy(_.y).y
@@ -18,7 +27,10 @@ class Chunk(val cells: List[Cell]) {
     val grid = new Grid(height, width)
     val startPos = (height - maxY - 1, width - maxX - 1)
 
-    grid.setChunk(this, startPos).toString
+    grid.setChunk(this, startPos).get.toString
   }
+
+  private def rotate90: Chunk =
+    Chunk(this.cells.map(_.rotate90))
 
 }
