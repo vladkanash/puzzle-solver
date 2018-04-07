@@ -17,35 +17,13 @@ class Grid(val height: Int,
 
   lazy val freeCellsNum: Int = cellsNum - placedCells.length
 
-  def setChunk(chunk: Chunk, startPos: Cell, skipCheck: Boolean = false): Option[Grid] = {
-    if (skipCheck || canPlaceChunk(chunk, startPos)) {
-      Some(new Grid(height, width, chunk.setToPos(startPos) :: chunks))
-    } else None
-  }
-
-  def canPlaceChunk(chunk: Chunk, startPos: Cell): Boolean = {
-    val mappedCells = chunk.setToPos(startPos).cells
-    (!mappedCells.exists(invalidCell)) && placedCells.intersect(mappedCells).isEmpty
-  }
-
-  def placeChunks(chunks: List[Chunk]): Option[Grid] = chunks match {
-    case Nil => Some(this)
-    case chunk :: tail =>
-      freeCells
-        .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
-        .map(tuple => new Grid(height, width, tuple._2.setToPos(tuple._1) :: this.chunks))
-        .collectFirst({
-          case grid if grid.placeChunks(tail).isDefined => grid.placeChunks(tail).get
-        })
-  }
-
   lazy val freeChunks: List[Chunk] = {
 
     def buildChunk(old: List[Cell]): List[Cell] = {
       def getAllNeighboursForCell(cell: Cell): List[Cell] = {
         val x = cell.x
         val y = cell.y
-        List(Cell(y-1, x), Cell(y, x-1), Cell(y, x), Cell(y, x+1), Cell(y+1, x))
+        List(Cell(y - 1, x), Cell(y, x - 1), Cell(y, x), Cell(y, x + 1), Cell(y + 1, x))
       }
 
       def getValidNeighboursForCell(cell: Cell): List[Cell] =
@@ -66,13 +44,35 @@ class Grid(val height: Int,
 
     def buildChunks(freeCells: List[Cell], chunks: List[Chunk]): List[Chunk] = freeCells match {
       case Nil => chunks
-      case head::tail =>
+      case head :: tail =>
         val newChunk = createChunk(head)
         val cellsLeft = tail diff newChunk.cells
         buildChunks(cellsLeft, newChunk :: chunks)
     }
 
     buildChunks(freeCells.toList, List.empty)
+  }
+
+  def placeChunk(chunk: Chunk, startPos: Cell, skipCheck: Boolean = false): Option[Grid] = {
+    if (skipCheck || canPlaceChunk(chunk, startPos)) {
+      Some(new Grid(height, width, chunk.setToPos(startPos) :: chunks))
+    } else None
+  }
+
+  def placeChunks(chunks: List[Chunk]): Option[Grid] = chunks match {
+    case Nil => Some(this)
+    case chunk :: tail =>
+      freeCells
+        .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
+        .map(tuple => new Grid(height, width, tuple._2.setToPos(tuple._1) :: this.chunks))
+        .collectFirst({
+          case grid if grid.placeChunks(tail).isDefined => grid.placeChunks(tail).get
+        })
+  }
+
+  def canPlaceChunk(chunk: Chunk, startPos: Cell): Boolean = {
+    val mappedCells = chunk.setToPos(startPos).cells
+    (!mappedCells.exists(invalidCell)) && placedCells.intersect(mappedCells).isEmpty
   }
 
   override def toString: String = {
@@ -86,10 +86,10 @@ class Grid(val height: Int,
       .mkString("\n", "\n", "\n")
   }
 
+  private def invalidCell(cell: Cell): Boolean =
+    (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
+
   private def getRotatedChunks(chunk: Chunk, startPos: Cell): List[Chunk] = {
     chunk.rotated.filter(canPlaceChunk(_, startPos))
   }
-
-  private def invalidCell(cell: Cell): Boolean =
-    (cell.y < 0 || cell.x < 0) || (cell.y >= height || cell.x >= width)
 }

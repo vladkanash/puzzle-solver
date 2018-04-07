@@ -32,7 +32,7 @@ case class Chunk(cells: List[Cell], symmType: Symmetry.Value = Symmetry.None) {
     val grid = new Grid(height, width)
     val startPos = (height - maxY - 1, width - maxX - 1)
 
-    grid.setChunk(this, startPos).get.toString
+    grid.placeChunk(this, startPos).get.toString
   }
 
   private def rotate90: Chunk =

@@ -6,7 +6,7 @@ class GridTest extends GridTestSuite {
 
   gridTest("You should be able to place chunks on a grid") {
     (chunk, grid, startPos) => {
-      val newGrid = grid.setChunk(chunk, startPos)
+      val newGrid = grid.placeChunk(chunk, startPos)
       if (newGrid.isDefined)
         grid.freeCellsNum - newGrid.get.freeCellsNum shouldEqual chunk.cells.length
       else succeed
@@ -15,7 +15,7 @@ class GridTest extends GridTestSuite {
 
   gridTest("Free cells field should contain all free cells on the grid") {
     (chunk, grid, startPos) => {
-      val newGrid = grid.setChunk(chunk, startPos)
+      val newGrid = grid.placeChunk(chunk, startPos)
       if (newGrid.isDefined)
         newGrid.get.freeCells intersect newGrid.get.placedCells shouldEqual List.empty
       else succeed
@@ -24,7 +24,7 @@ class GridTest extends GridTestSuite {
 
   gridTest("canPlaceChunk() should check id the chunk fits to the current grid") {
     (chunk, grid, startPos) => {
-      val newGrid = grid.setChunk(chunk, startPos)
+      val newGrid = grid.placeChunk(chunk, startPos)
       newGrid.isDefined shouldEqual grid.canPlaceChunk(chunk, startPos)
     }
   }
