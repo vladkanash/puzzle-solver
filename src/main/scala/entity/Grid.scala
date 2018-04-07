@@ -33,10 +33,46 @@ class Grid(val height: Int,
     case chunk :: tail =>
       freeCells
         .flatMap(cell => getRotatedChunks(chunk, cell).map((cell, _)))
-        .map(tuple => setChunk(tuple._2, tuple._1, skipCheck = true))
-        .filter(_.nonEmpty).map(_.get)
-        .find(grid => grid.placeChunks(tail).isDefined)
-        .flatMap(grid => grid.placeChunks(tail))
+        .map(tuple => new Grid(height, width, tuple._2.setToPos(tuple._1) :: this.chunks))
+        .collectFirst({
+          case grid if grid.placeChunks(tail).isDefined => grid.placeChunks(tail).get
+        })
+  }
+
+  lazy val freeChunks: List[Chunk] = {
+
+    def buildChunk(old: List[Cell]): List[Cell] = {
+      def getAllNeighboursForCell(cell: Cell): List[Cell] = {
+        val x = cell.x
+        val y = cell.y
+        List(Cell(y-1, x), Cell(y, x-1), Cell(y, x), Cell(y, x+1), Cell(y+1, x))
+      }
+
+      def getValidNeighboursForCell(cell: Cell): List[Cell] =
+        getAllNeighboursForCell(cell).filterNot(invalidCell).filter(freeCells.contains)
+
+      def appendNeighbours(cells: List[Cell]): List[Cell] =
+        cells.flatMap(getValidNeighboursForCell).distinct
+
+      val updated = appendNeighbours(old)
+      if (updated.lengthCompare(old.length) == 0)
+        old
+      else
+        buildChunk(updated)
+    }
+
+    def createChunk(cell: Cell): Chunk =
+      Chunk(buildChunk(List(cell)))
+
+    def buildChunks(freeCells: List[Cell], chunks: List[Chunk]): List[Chunk] = freeCells match {
+      case Nil => chunks
+      case head::tail =>
+        val newChunk = createChunk(head)
+        val cellsLeft = tail diff newChunk.cells
+        buildChunks(cellsLeft, newChunk :: chunks)
+    }
+
+    buildChunks(freeCells.toList, List.empty)
   }
 
   override def toString: String = {
