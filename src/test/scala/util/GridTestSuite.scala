@@ -10,6 +10,7 @@ import scala.util.Random
 trait GridTestSuite extends PropSpec with PropertyChecks with Matchers {
 
   private val CHUNK_MAX_SIZE = 6
+  private val CHUNK_LIST_MAX_SIZE = 1
   private val GRID_MAX_SIZE = 10
   private val random = new Random
 
@@ -17,19 +18,30 @@ trait GridTestSuite extends PropSpec with PropertyChecks with Matchers {
     for (x <- Gen.choose(0, GRID_MAX_SIZE); y <- Gen.choose(0, GRID_MAX_SIZE))
       yield (x, y)
 
-  private val chunksGenerator =
-    for (chunkSize <- Gen.choose(0, CHUNK_MAX_SIZE))
-      yield createRandomChunk(chunkSize)
+  private val chunkListGenerator =
+    for (listSize <- Gen.choose(1, CHUNK_LIST_MAX_SIZE);
+         chunkSize <- Gen.choose(0, CHUNK_MAX_SIZE))
+      yield (0 to listSize).map(_ => createRandomChunk(chunkSize)).toList
 
   private val gridGenerator =
     for (width <- Gen.choose(1, GRID_MAX_SIZE); height <- Gen.choose(1, GRID_MAX_SIZE))
       yield new Grid(height, width)
 
-  def gridTest(testName: String)(test: (Chunk, Grid, (Int, Int)) => Assertion): Unit = {
+  def gridTest(testName: String)(test: (List[Chunk], Grid, (Int, Int)) => Assertion): Unit = {
     property(testName) {
-      forAll(chunksGenerator, gridGenerator, posGenerator) {
-        (chunk: Chunk, grid: Grid, startPos: (Int, Int)) => {
-          test(chunk, grid, startPos)
+      forAll(chunkListGenerator, gridGenerator, posGenerator) {
+        (chunks: List[Chunk], grid: Grid, startPos: (Int, Int)) => {
+          test(chunks, grid, startPos)
+        }
+      }
+    }
+  }
+
+  def chunkTest(testName: String)(test: (List[Chunk]) => Assertion): Unit = {
+    property(testName) {
+      forAll(chunkListGenerator) {
+        (chunks: List[Chunk]) => {
+          test(chunks)
         }
       }
     }
@@ -52,5 +64,4 @@ trait GridTestSuite extends PropSpec with PropertyChecks with Matchers {
 
     Chunk(appendCells(List((0, 0)), size))
   }
-
 }

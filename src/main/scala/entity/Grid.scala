@@ -40,7 +40,7 @@ class Grid(val height: Int,
     }
 
     def createChunk(cell: Cell): Chunk =
-      Chunk(buildChunk(List(cell)))
+      Chunk(buildChunk(List(cell)), startPos = cell)
 
     def buildChunks(freeCells: List[Cell], chunks: List[Chunk]): List[Chunk] = freeCells match {
       case Nil => chunks
